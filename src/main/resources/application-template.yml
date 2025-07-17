@@ -1,0 +1,43 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: export-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/metricsdb
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:metricsuser}
+    password: ${DB_PASSWORD:metricspass}
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+      jdbc:
+        batch_size: 1000
+        order_inserts: true
+        order_updates: true
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 1000
+  
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+logging:
+  level:
+    com.metrics.exportservice: DEBUG
+    org.springframework.web: DEBUG
