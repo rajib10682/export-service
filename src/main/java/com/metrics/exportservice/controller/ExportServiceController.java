@@ -5,6 +5,8 @@ import com.metrics.exportservice.service.BulkDataService;
 import com.metrics.exportservice.service.ExcelProcessingService;
 import com.metrics.exportservice.service.ParallelBulkDataService;
 import com.metrics.exportservice.service.ExportService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,8 +20,9 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/export-service")
-@CrossOrigin(origins = "*")
 public class ExportServiceController {
+    
+    private static final Logger logger = LoggerFactory.getLogger(ExportServiceController.class);
     
     @Autowired
     private ExcelProcessingService excelProcessingService;
@@ -37,22 +40,33 @@ public class ExportServiceController {
     
     @PostMapping("/upload/bulk")
     public ResponseEntity<byte[]> bulkUpload(@RequestParam("file") MultipartFile file) {
+        logger.info("Received file upload request: {}", file.getOriginalFilename());
+        
         if (file.isEmpty()) {
+            logger.error("File is empty");
             throw new IllegalArgumentException("File cannot be empty");
         }
         
         if (file.getSize() > MAX_FILE_SIZE) {
+            logger.error("File size exceeds limit: {} bytes", file.getSize());
             throw new IllegalArgumentException("File size exceeds maximum allowed size of 50MB");
         }
         
         String fileName = file.getOriginalFilename();
         if (fileName == null || (!fileName.toLowerCase().endsWith(".xlsx") && !fileName.toLowerCase().endsWith(".xls"))) {
+            logger.error("Invalid file format: {}", fileName);
             throw new IllegalArgumentException("File must be an Excel file (.xlsx or .xls)");
         }
         
         try {
+            logger.info("Processing Excel file: {} ({} bytes)", fileName, file.getSize());
             byte[] fileData = file.getBytes();
             Map<String, List<Map<String, Object>>> excelData = excelProcessingService.parseExcelFile(fileData);
+            
+            logger.info("Parsed Excel data - Plans: {}, Overrides: {}, Items: {}", 
+                excelData.get("Plans").size(), 
+                excelData.get("Overrides").size(), 
+                excelData.get("Items").size());
             
             Map<String, List<String>> processingResult = parallelBulkDataService.processParallelBulkData(excelData);
             
@@ -76,13 +90,18 @@ public class ExportServiceController {
             
             byte[] responseExcel = excelProcessingService.generateResponseExcel(excelData, statusMap, reasonMap);
             
+            String responseFilename = "bulk_upload_response_" + System.currentTimeMillis() + ".xlsx";
+            logger.info("Successfully processed file. Response file: {} ({} bytes)", responseFilename, responseExcel.length);
+            
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setContentDispositionFormData("attachment", "bulk_upload_response_" + System.currentTimeMillis() + ".xlsx");
+            headers.setContentDispositionFormData("attachment", responseFilename);
+            headers.set("Access-Control-Expose-Headers", "Content-Disposition");
             
             return ResponseEntity.ok().headers(headers).body(responseExcel);
             
         } catch (Exception e) {
+            logger.error("Failed to process file: {}", e.getMessage(), e);
             throw new BulkProcessingException("Failed to process bulk upload: " + e.getMessage(), e);
         }
     }

@@ -10,9 +10,16 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("*")
+                .allowedOriginPatterns(
+                    "http://localhost:*",
+                    "https://user:*@application-development-analyzer-tunnel-gmxqxmbk.devinapps.com",
+                    "https://application-development-analyzer-tunnel-gmxqxmbk.devinapps.com",
+                    "https://*application-development-analyzer-tunnel-gmxqxmbk.devinapps.com"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                .allowCredentials(false);
+                .allowCredentials(true)
+                .exposedHeaders("Content-Disposition")
+                .maxAge(3600);
     }
 }

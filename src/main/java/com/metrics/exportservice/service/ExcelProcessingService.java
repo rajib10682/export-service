@@ -35,7 +35,7 @@ public class ExcelProcessingService {
     
     private List<Map<String, Object>> parseWorksheet(Workbook workbook, String sheetName, List<String> expectedColumns) {
         List<Map<String, Object>> rows = new ArrayList<>();
-        Sheet sheet = workbook.getSheet(sheetName);
+        Sheet sheet = findSheet(workbook, sheetName);
         
         if (sheet == null) {
             return rows;
@@ -219,5 +219,26 @@ public class ExcelProcessingService {
         }
         
         return columns;
+    }
+    
+    private Sheet findSheet(Workbook workbook, String sheetName) {
+        String[] possibleNames;
+        if ("Plans".equals(sheetName)) {
+            possibleNames = new String[]{"Plans", "Plan", "plans", "plan"};
+        } else if ("Overrides".equals(sheetName)) {
+            possibleNames = new String[]{"Overrides", "Override", "overrides", "override"};
+        } else if ("Items".equals(sheetName)) {
+            possibleNames = new String[]{"Items", "Item", "items", "item"};
+        } else {
+            possibleNames = new String[]{sheetName};
+        }
+        
+        for (String name : possibleNames) {
+            Sheet sheet = workbook.getSheet(name);
+            if (sheet != null) {
+                return sheet;
+            }
+        }
+        return null;
     }
 }
