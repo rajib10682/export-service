@@ -224,11 +224,16 @@ public class ExcelProcessingService {
     private Sheet findSheet(Workbook workbook, String sheetName) {
         String[] possibleNames;
         if ("Plans".equals(sheetName)) {
-            possibleNames = new String[]{"Plans", "Plan", "plans", "plan"};
+            possibleNames = new String[]{"Plans", "Plan", "plans", "plan", "PLANS", "PLAN", 
+                                       "Plan Data", "Plans Data", "plan data", "plans data"};
         } else if ("Overrides".equals(sheetName)) {
-            possibleNames = new String[]{"Overrides", "Override", "overrides", "override"};
+            possibleNames = new String[]{"Overrides", "Override", "overrides", "override", 
+                                       "OVERRIDES", "OVERRIDE", "Override Data", "Overrides Data",
+                                       "override data", "overrides data", "Secondary", "secondary"};
         } else if ("Items".equals(sheetName)) {
-            possibleNames = new String[]{"Items", "Item", "items", "item"};
+            possibleNames = new String[]{"Items", "Item", "items", "item", "ITEMS", "ITEM",
+                                       "Item Data", "Items Data", "item data", "items data",
+                                       "Tertiary", "tertiary", "Details", "details"};
         } else {
             possibleNames = new String[]{sheetName};
         }
